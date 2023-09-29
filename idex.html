@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card">
+        <div class="search">
+            <input type="text" name="" id="" placeholder="Enter city name" spellcheck="false">
+            <button><img src="images/search.png" alt=""></button>
+        </div>
+        <div class="error">
+            <p>Invalid city name</p>
+        </div>
+        <div class="weather">
+            <img src="images/rain.png" alt="" class="weather-icon">
+            <h1 class="temp"></h1>
+            <h2 class="city"></h2>
+            <div class="details">
+                <div class="col">
+                    <img src="images/humidity.png" alt="">
+                    <div class="">
+                        <p class="humidity"></p>
+                        <p>Humidity</p>
+                    </div>
+                </div>
+                <div class="col">
+                    <img src="images/wind.png" alt="">
+                    <div class="">
+                        <p class="wind"></p>
+                        <p>Wind Speed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = '6dedc67fe8c29993c6a1f56c0db8738c';
+        const apiUrl = 'https://api.openweathermap.org/data/2.5/weather?units=metric';
+
+        const searchBox = document.querySelector('.search input');
+        const searchBtn = document.querySelector('.search button');
+        var weatherIcon = document.querySelector('.weather-icon')
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var localCity = '';
+            navigator.geolocation.getCurrentPosition(position => {
+                const {latitude, longitude} = position.coords;
+                
+                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
+                console.log(url)
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        localCity = data.address.city;
+                        // console.log(localCity)
+                        localCity = localCity.replace(new RegExp('Thành phố ', 'gi'), '');
+                        console.log(localCity)
+                        checkWeather(localCity);
+                    })
+                    .catch(() => console.log('error'))
+            })
+           
+            
+        })
+
+        async function checkWeather(cityName) {
+            const respone = await fetch(apiUrl + `&appid=${apiKey}` + `&q=${cityName}`);
+
+            if(respone.status == 404) {
+                document.querySelector('.error').style.display = 'block';
+                document.querySelector('.weather').style.display = 'none';
+            } else {
+
+                var data = await respone.json();
+              
+    
+                document.querySelector('.city').innerHTML = data.name;
+                document.querySelector('.temp').innerHTML = Math.round(data.main.temp) + '°c';
+                document.querySelector('.humidity').innerHTML = data.main.humidity + '%';
+                document.querySelector('.wind').innerHTML = data.wind.speed + ' km/h';
+    
+                switch(data.weather[0].main) {
+                    case 'Clouds':
+                        weatherIcon.src = 'images/clouds.png';
+                        break;
+                    case 'Clear':
+                        weatherIcon.src = 'images/clear.png';
+                        break;
+                    case 'Rain':
+                        weatherIcon.src = 'images/rain.png';
+                        break;
+                    case 'Drizzle':
+                        weatherIcon.src = 'images/drizzle.png';
+                        break;
+                }
+    
+                document.querySelector('.weather').style.display = 'block';
+                document.querySelector('.error').style.display = 'none';
+            }
+
+        }
+
+        searchBtn.addEventListener('click', () => {
+            checkWeather(searchBox.value);
+        })
+    </script>
+</body>
+</html>
